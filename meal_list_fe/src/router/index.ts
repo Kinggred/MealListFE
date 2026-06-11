@@ -16,18 +16,18 @@ const router = createRouter({
       path: "/planner",
       component: () => import("@/views/PlannerView.vue"),
     },
-    // {
-    //   path: "/recipes",
-    //   component: () => import("@/views/RecipesView.vue"),
-    // },
+    {
+      path: "/recipes",
+      component: () => import("@/views/RecipesView.vue"),
+    },
     {
       path: "/ingredients",
       component: () => import("@/views/IngredientsView.vue"),
     },
-    // {
-    //   path: "/diets",
-    //   component: () => import("@/views/DietsView.vue"),
-    // },
+    {
+      path: "/diets",
+      component: () => import("@/views/DietsView.vue"),
+    },
   ],
 })
 

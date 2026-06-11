@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import { computed, ref } from "vue"
+import { computed, onMounted, ref, watch } from "vue"
 import { useRoute } from "vue-router"
 import { usePlannerStore } from "@/stores/planner"
+import { getRecipes } from "@/api/recipes"
+import type { Recipe } from "@/types/Recipe"
 
 const route = useRoute()
 const planner = usePlannerStore()
+const recipes = ref<Recipe[]>([])
+const selectedRecipeId = ref("")
+const actionError = ref<string | null>(null)
 
 function parseInitialDate(): Date {
   if (typeof route.query.date === "string") {
@@ -37,6 +42,34 @@ const dayDishes = computed(() =>
 const selectedDish = computed(() =>
   planner.dishes.find((dish) => dish.id === selectedDishId.value) ?? null,
 )
+
+function monthStart(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+function monthEnd(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+}
+
+async function loadMonth() {
+  await planner.fetchDishes(monthStart(currentDate.value), monthEnd(currentDate.value))
+}
+
+async function loadRecipes() {
+  const page = await getRecipes({ size: 100 })
+  recipes.value = page.items
+  selectedRecipeId.value = page.items[0]?.id ?? ""
+}
+
+onMounted(async () => {
+  await Promise.all([loadMonth(), loadRecipes()])
+})
+
+watch(currentDate, loadMonth)
+
+watch(selectedDishId, async (dishId) => {
+  if (dishId) await planner.fetchDishDetails(dishId)
+})
 
 const calendarDays = computed(() => {
   const year = currentDate.value.getFullYear()
@@ -117,19 +150,96 @@ function nextMonth() {
   )
 }
 
-function addDish() {
-  const dish = planner.addDish(selectedDate.value)
-  selectedDishId.value = dish.id
+async function addDish() {
+  actionError.value = null
+
+  try {
+    const dish = await planner.addDish(selectedDate.value)
+    selectedDishId.value = dish.id
+  } catch {
+    actionError.value = "Failed to add meal"
+  }
 }
 
-function addMockRecipe() {
-  if (!selectedDish.value) return
-  planner.addMockRecipeToDish(selectedDish.value.id)
+async function addRecipe() {
+  if (!selectedDish.value || !selectedRecipeId.value) return
+  actionError.value = null
+
+  try {
+    await planner.addRecipeToDish(selectedDish.value.id, selectedRecipeId.value)
+  } catch {
+    actionError.value = "Failed to add recipe"
+  }
 }
 
-function removeRecipe(recipeId: string) {
+async function removeDish() {
   if (!selectedDish.value) return
-  planner.removeRecipeFromDish(selectedDish.value.id, recipeId)
+  actionError.value = null
+
+  try {
+    const dishId = selectedDish.value.id
+    await planner.removeDish(dishId)
+    selectedDishId.value = null
+  } catch {
+    actionError.value = "Failed to remove meal"
+  }
+}
+
+async function saveDishName(name: string) {
+  if (!selectedDish.value) return
+  actionError.value = null
+
+  try {
+    await planner.updateDishName(selectedDish.value.id, name)
+  } catch {
+    actionError.value = "Failed to update meal name"
+  }
+}
+
+async function saveDishTime(time: string) {
+  if (!selectedDish.value) return
+  actionError.value = null
+
+  try {
+    await planner.updateDishTime(selectedDish.value.id, time)
+  } catch {
+    actionError.value = "Failed to update meal time"
+  }
+}
+
+async function saveRecipePortions(
+  connectionId: string,
+  fullPortions: number,
+  halfPortions: number,
+) {
+  if (!selectedDish.value) return
+  actionError.value = null
+
+  try {
+    await planner.updateRecipePortions(
+      selectedDish.value.id,
+      connectionId,
+      fullPortions,
+      halfPortions,
+    )
+  } catch {
+    actionError.value = "Failed to update portions"
+  }
+}
+
+async function removeRecipe(connectionId: string) {
+  if (!selectedDish.value) return
+  actionError.value = null
+
+  try {
+    await planner.removeRecipeFromDish(selectedDish.value.id, connectionId)
+  } catch {
+    actionError.value = "Failed to remove recipe"
+  }
+}
+
+function selectDish(dishId: string) {
+  selectedDishId.value = dishId
 }
 </script>
 
@@ -146,45 +256,80 @@ function removeRecipe(recipeId: string) {
         <label>Name</label>
         <input
           :value="selectedDish.name"
-          @input="
-            planner.updateDishName(
-              selectedDish.id,
-              ($event.target as HTMLInputElement).value,
-            )
-          "
+          @change="saveDishName(($event.target as HTMLInputElement).value)"
         />
 
         <label>Serving time</label>
         <input
           type="time"
           :value="selectedDish.time"
-          @input="
-            planner.updateDishTime(
-              selectedDish.id,
-              ($event.target as HTMLInputElement).value,
-            )
-          "
+          @change="saveDishTime(($event.target as HTMLInputElement).value)"
         />
 
         <div class="section-header">
           <h3>Recipes</h3>
-          <button @click="addMockRecipe">+</button>
+          <button class="danger" @click="removeDish">Delete meal</button>
         </div>
+
+        <div class="add-recipe-row">
+          <select v-model="selectedRecipeId">
+            <option
+              v-for="recipe in recipes"
+              :key="recipe.id"
+              :value="recipe.id"
+            >
+              {{ recipe.name }}
+            </option>
+          </select>
+
+          <button
+            :disabled="!selectedRecipeId"
+            @click="addRecipe"
+          >
+            Add
+          </button>
+        </div>
+
+        <p v-if="actionError" class="error">
+          {{ actionError }}
+        </p>
 
         <div
           v-for="recipe in selectedDish.recipes"
-          :key="recipe.recipeId"
+          :key="recipe.connectionId"
           class="recipe-row"
         >
           <span>{{ recipe.recipeName }}</span>
 
           <input
-            v-model.number="recipe.portions"
             type="number"
-            min="1"
+            min="0"
+            :value="recipe.fullPortions"
+            title="Full portions"
+            @change="
+              saveRecipePortions(
+                recipe.connectionId,
+                Number(($event.target as HTMLInputElement).value),
+                recipe.halfPortions,
+              )
+            "
           />
 
-          <button @click="removeRecipe(recipe.recipeId)">x</button>
+          <input
+            type="number"
+            min="0"
+            :value="recipe.halfPortions"
+            title="Half portions"
+            @change="
+              saveRecipePortions(
+                recipe.connectionId,
+                recipe.fullPortions,
+                Number(($event.target as HTMLInputElement).value),
+              )
+            "
+          />
+
+          <button @click="removeRecipe(recipe.connectionId)">x</button>
         </div>
       </template>
     </aside>
@@ -214,7 +359,7 @@ function removeRecipe(recipeId: string) {
           :key="dish.id"
           class="dish-card"
           :class="{ active: dish.id === selectedDishId }"
-          @click="selectedDishId = dish.id"
+          @click="selectDish(dish.id)"
         >
           <strong>{{ dish.time }}</strong>
 
@@ -233,6 +378,10 @@ function removeRecipe(recipeId: string) {
         <h2>{{ monthName }}</h2>
 
         <button @click="nextMonth">→</button>
+      </div>
+
+      <div v-if="planner.loading" class="state">
+        Loading...
       </div>
 
       <div class="weekdays">
@@ -320,6 +469,15 @@ input {
   padding: 10px;
 }
 
+select {
+  min-width: 0;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+}
+
 button {
   border: 1px solid var(--border);
   background: var(--bg);
@@ -363,15 +521,35 @@ button:hover {
 
 .recipe-row {
   display: grid;
-  grid-template-columns: 1fr 70px auto;
+  grid-template-columns: 1fr 70px 70px auto;
   gap: 8px;
   align-items: center;
+}
+
+.add-recipe-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.danger:hover {
+  border-color: #d64545;
+  color: #d64545;
+}
+
+.state,
+.error {
+  color: var(--muted);
+}
+
+.error {
+  color: #b00020;
 }
 
 .calendar-header {

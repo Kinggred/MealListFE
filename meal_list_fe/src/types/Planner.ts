@@ -1,7 +1,9 @@
 export interface PlannedRecipe {
   recipeId: string
   recipeName: string
-  portions: number
+  connectionId: string
+  fullPortions: number
+  halfPortions: number
 }
 
 export interface PlannedDish {
@@ -10,4 +12,5 @@ export interface PlannedDish {
   time: string
   name: string
   recipes: PlannedRecipe[]
+  detailsLoaded: boolean
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue"
+import { computed, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import { usePlannerStore } from "@/stores/planner"
 
@@ -21,6 +21,22 @@ const monthName = computed(() =>
 const selectedDayDishes = computed(() =>
   planner.getDishesForDate(selectedDate.value),
 )
+
+function monthStart(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1)
+}
+
+function monthEnd(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+}
+
+async function loadMonth() {
+  await planner.fetchDishes(monthStart(currentDate.value), monthEnd(currentDate.value))
+}
+
+onMounted(loadMonth)
+
+watch(currentDate, loadMonth)
 
 const calendarDays = computed(() => {
   const year = currentDate.value.getFullYear()
@@ -166,6 +182,10 @@ function planMeals() {
         Plan meals
       </button>
     </div>
+
+    <div v-if="planner.error" class="state error">
+      {{ planner.error }}
+    </div>
   </section>
 </template>
 
@@ -288,5 +308,13 @@ function planMeals() {
 .plan-button {
   background: #4f8ef7;
   color: white;
+}
+
+.state {
+  color: var(--muted);
+}
+
+.error {
+  color: #b00020;
 }
 </style>

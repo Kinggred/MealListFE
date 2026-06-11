@@ -21,7 +21,10 @@ const register = ref(false)
 
       <LoginForm v-if="!register"/>
 
-      <RegisterForm v-else/>
+      <RegisterForm
+        v-else
+        @registered="register = false"
+      />
 
       <div class="footer">
 
