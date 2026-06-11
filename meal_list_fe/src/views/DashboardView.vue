@@ -2,6 +2,8 @@
 import { computed, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import { usePlannerStore } from "@/stores/planner"
+import type { ShoppingList } from "@/types/ShoppingList"
+import { getShoppingList } from "@/api/meals"
 
 const router = useRouter()
 const planner = usePlannerStore()
@@ -10,6 +12,40 @@ const currentDate = ref(new Date())
 const selectedDate = ref(new Date())
 
 const today = new Date()
+
+const shoppingDateFrom = ref(today.toISOString().slice(0, 10))
+const shoppingDateTo = ref(today.toISOString().slice(0, 10))
+const shoppingList = ref<ShoppingList | null>(null)
+
+const shoppingListLoading = ref(false)
+const shoppingListError = ref<string | null>(null)
+
+async function generateShoppingList() {
+  shoppingListLoading.value = true
+  shoppingListError.value = null
+  shoppingList.value = null
+
+  try {
+    shoppingList.value = await getShoppingList(
+      shoppingDateFrom.value,
+      shoppingDateTo.value,
+    )
+  } catch (error) {
+    console.error(error)
+    shoppingListError.value = "Failed to generate shopping list"
+  } finally {
+    shoppingListLoading.value = false
+  }
+}
+
+const totalEstimatedCost = computed(() => {
+  if (!shoppingList.value) return 0
+
+  return shoppingList.value.ingredient_list.reduce(
+    (sum, ingredient) => sum + ingredient.estimated_cost,
+    0,
+  )
+})
 
 const monthName = computed(() =>
   currentDate.value.toLocaleDateString("en-US", {
@@ -165,14 +201,94 @@ function planMeals() {
       </div>
     </div>
 
+    <div class="shopping-list-panel">
+      <label>
+        From
+        <input v-model="shoppingDateFrom" type="date" />
+      </label>
+
+      <label>
+        To
+        <input v-model="shoppingDateTo" type="date" />
+      </label>
+
+      <button
+        class="plan-button"
+        :disabled="shoppingListLoading"
+        @click="generateShoppingList"
+      >
+        {{ shoppingListLoading ? "Generating..." : "Generate shopping list" }}
+      </button>
+    </div>
+
+    <div v-if="shoppingListLoading" class="state">
+      Loading shopping list...
+    </div>
+
+    <div v-else-if="shoppingListError" class="state error">
+      {{ shoppingListError }}
+    </div>
+
+    <div v-else-if="shoppingList" class="shopping-list-result">
+      <h3>Shopping list</h3>
+
+      <p class="shopping-list-range">
+        {{ shoppingList.date_from }} → {{ shoppingList.date_to }}
+      </p>
+
+      <p
+        v-if="shoppingList.ingredient_list.length === 0"
+        class="state"
+      >
+        No ingredients found for this date range.
+      </p>
+
+      <table v-else class="shopping-list-table">
+        <thead>
+        <tr>
+          <th>Ingredient</th>
+          <th>Amount</th>
+          <th>Unit</th>
+          <th>Cost</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr
+          v-for="ingredient in shoppingList.ingredient_list"
+          :key="ingredient.id"
+        >
+          <td>{{ ingredient.name }}</td>
+          <td>{{ ingredient.amount }}</td>
+          <td>{{ ingredient.unit_of_measurement }}</td>
+          <td>{{ ingredient.estimated_cost.toFixed(2) }}</td>
+        </tr>
+        </tbody>
+
+        <tfoot>
+        <tr>
+          <td colspan="3">
+            <strong>Total</strong>
+          </td>
+
+          <td>
+            <strong>{{ totalEstimatedCost.toFixed(2) }}</strong>
+          </td>
+        </tr>
+        </tfoot>
+      </table>
+    </div>
+
     <div class="selected-panel">
       <div>
         <h3>
-          {{ selectedDate.toLocaleDateString("en-US", {
-          weekday: "long",
-          month: "long",
-          day: "numeric",
-        }) }}
+          {{
+            selectedDate.toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })
+          }}
         </h3>
 
         <p>{{ selectedDayDishes.length }} dishes planned</p>
@@ -197,14 +313,88 @@ function planMeals() {
   gap: 24px;
 }
 
-.calendar-card {
+.calendar-card,
+.shopping-list-panel,
+.shopping-list-result,
+.selected-panel {
   box-sizing: border-box;
+  width: 100%;
+  max-width: 1100px;
   border: 1px solid var(--border);
   background: var(--card);
   border-radius: 16px;
+}
+
+.calendar-card {
   padding: 24px;
+}
+
+.shopping-list-panel {
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  align-items: end;
+}
+
+.shopping-list-result {
+  padding: 20px;
+}
+
+.shopping-list-result h3 {
+  margin: 0 0 4px;
+}
+
+.shopping-list-range {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.shopping-list-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.shopping-list-panel input {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.shopping-list-table {
   width: 100%;
-  max-width: 1100px;
+  border-collapse: collapse;
+}
+
+.shopping-list-table th,
+.shopping-list-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.shopping-list-table th {
+  color: var(--muted);
+  font-weight: 500;
+  text-align: left;
+}
+
+.shopping-list-table th:nth-child(2),
+.shopping-list-table td:nth-child(2),
+.shopping-list-table th:nth-child(3),
+.shopping-list-table td:nth-child(3),
+.shopping-list-table th:nth-child(4),
+.shopping-list-table td:nth-child(4) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.shopping-list-table tfoot td {
+  padding-top: 16px;
+  border-top: 2px solid var(--border);
+  border-bottom: none;
 }
 
 .calendar-header {
@@ -282,15 +472,7 @@ function planMeals() {
 }
 
 .selected-panel {
-  box-sizing: border-box;
-  width: 100%;
-  max-width: 1100px;
-
-  border: 1px solid var(--border);
-  background: var(--card);
-  border-radius: 16px;
   padding: 20px;
-
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -308,6 +490,11 @@ function planMeals() {
 .plan-button {
   background: #4f8ef7;
   color: white;
+}
+
+.plan-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .state {

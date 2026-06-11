@@ -8,8 +8,8 @@ import type {
   MealResults,
   MealUpdate,
   MealView,
-  ShoppingListView,
 } from "@/types/Meal"
+import type {ShoppingList} from "@/types/ShoppingList.ts";
 
 interface MealPageParams {
   date_from?: string
@@ -34,9 +34,19 @@ export async function createMeal(meal: MealCreate): Promise<Meal> {
 }
 
 export async function getShoppingList(
-  params: ShoppingListParams = {},
-): Promise<ShoppingListView> {
-  const response = await api.get("/meals/shopping_list", { params })
+  dateFrom: string,
+  dateTo: string,
+): Promise<ShoppingList> {
+  const response = await api.get<ShoppingList>(
+    "/meals/shopping_list",
+    {
+      params: {
+        date_from: dateFrom,
+        date_to: dateTo,
+      },
+    },
+  )
+
   return response.data
 }
 
