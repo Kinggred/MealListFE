@@ -10,7 +10,6 @@ import type {
   MealView,
 } from "@/types/Meal"
 import type {ShoppingList} from "@/types/ShoppingList.ts";
-import type {Ref, UnwrapRef} from "vue";
 
 interface MealPageParams {
   date_from?: string

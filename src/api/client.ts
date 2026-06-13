@@ -1,8 +1,14 @@
 import axios from "axios"
-const API_URL = window.APP_CONFIG?.API_URL ?? "localhost:8000/api/v1"
+
+const apiUrl =
+  window.APP_CONFIG?.API_URL && window.APP_CONFIG.API_URL !== "__API_URL__"
+    ? window.APP_CONFIG.API_URL
+    : import.meta.env.VITE_API_BASE_URL || "http://192.168.1.10:8000/api/v1"
+
+console.log("API URL:", apiUrl)
 
 export const api = axios.create({
-  baseURL: API_URL,
+  baseURL: apiUrl,
 })
 
 api.interceptors.request.use(config => {
