@@ -3,9 +3,10 @@ import { computed, onMounted, ref, watch } from "vue"
 import { useRouter } from "vue-router"
 import { usePlannerStore } from "@/stores/planner"
 import type { ShoppingList } from "@/types/ShoppingList"
-import { getShoppingList } from "@/api/meals"
+import { formatLocalDate, getShoppingList, getShoppingListFile } from "@/api/meals"
 
 const router = useRouter()
+const locale = window.navigator.language
 const planner = usePlannerStore()
 
 const currentDate = ref(new Date())
@@ -13,12 +14,13 @@ const selectedDate = ref(new Date())
 
 const today = new Date()
 
-const shoppingDateFrom = ref(today.toISOString().slice(0, 10))
-const shoppingDateTo = ref(today.toISOString().slice(0, 10))
 const shoppingList = ref<ShoppingList | null>(null)
-
 const shoppingListLoading = ref(false)
 const shoppingListError = ref<string | null>(null)
+
+const isSelectingRange = ref(false)
+const selectionDateFrom = ref(formatLocalDate(selectedDate.value))
+const selectionDateTo = ref(formatLocalDate(selectedDate.value))
 
 async function generateShoppingList() {
   shoppingListLoading.value = true
@@ -27,8 +29,8 @@ async function generateShoppingList() {
 
   try {
     shoppingList.value = await getShoppingList(
-      shoppingDateFrom.value,
-      shoppingDateTo.value,
+      selectionStartDate.value,
+      selectionEndDate.value,
     )
   } catch (error) {
     console.error(error)
@@ -36,6 +38,84 @@ async function generateShoppingList() {
   } finally {
     shoppingListLoading.value = false
   }
+}
+
+async function generateShoppingListFile() {
+  shoppingListLoading.value = true
+  shoppingListError.value = null
+
+  try {
+    const blob = await getShoppingListFile(
+      selectionStartDate.value,
+      selectionEndDate.value,
+    )
+
+    const url = window.URL.createObjectURL(blob)
+
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `shopping-list-${selectionStartDate.value}-${selectionEndDate.value}.pdf`
+    document.body.appendChild(link)
+    link.click()
+
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error(error)
+    shoppingListError.value = "Failed to generate shopping list file"
+  } finally {
+    shoppingListLoading.value = false
+  }
+}
+
+function dateFromDay(day: number): Date {
+  return new Date(
+    currentDate.value.getFullYear(),
+    currentDate.value.getMonth(),
+    day,
+  )
+}
+
+function startDaySelection(day: number | null) {
+  if (!day) return
+
+  const date = dateFromDay(day)
+  const key = formatLocalDate(date)
+
+  selectedDate.value = date
+  selectionDateFrom.value = key
+  selectionDateTo.value = key
+  isSelectingRange.value = true
+}
+
+function extendDaySelection(day: number | null) {
+  if (!isSelectingRange.value || !day) return
+
+  selectionDateTo.value = formatLocalDate(dateFromDay(day))
+}
+
+function finishDaySelection() {
+  isSelectingRange.value = false
+}
+
+const selectionStartDate = computed(() =>
+  selectionDateFrom.value <= selectionDateTo.value
+    ? selectionDateFrom.value
+    : selectionDateTo.value,
+)
+
+const selectionEndDate = computed(() =>
+  selectionDateFrom.value <= selectionDateTo.value
+    ? selectionDateTo.value
+    : selectionDateFrom.value,
+)
+
+function isSelected(day: number | null): boolean {
+  if (!day) return false
+
+  const key = formatLocalDate(dateFromDay(day))
+
+  return key >= selectionStartDate.value && key <= selectionEndDate.value
 }
 
 const totalEstimatedCost = computed(() => {
@@ -48,7 +128,7 @@ const totalEstimatedCost = computed(() => {
 })
 
 const monthName = computed(() =>
-  currentDate.value.toLocaleDateString("en-US", {
+  currentDate.value.toLocaleDateString(locale, {
     month: "long",
     year: "numeric",
   }),
@@ -67,11 +147,13 @@ function monthEnd(date: Date): Date {
 }
 
 async function loadMonth() {
-  await planner.fetchDishes(monthStart(currentDate.value), monthEnd(currentDate.value))
+  await planner.fetchDishes(
+    monthStart(currentDate.value),
+    monthEnd(currentDate.value),
+  )
 }
 
 onMounted(loadMonth)
-
 watch(currentDate, loadMonth)
 
 const calendarDays = computed(() => {
@@ -97,17 +179,15 @@ const calendarDays = computed(() => {
   return days
 })
 
-function dateFromDay(day: number): Date {
-  return new Date(
-    currentDate.value.getFullYear(),
-    currentDate.value.getMonth(),
-    day,
-  )
-}
-
 function selectDay(day: number | null) {
   if (!day) return
-  selectedDate.value = dateFromDay(day)
+
+  const date = dateFromDay(day)
+  selectedDate.value = date
+
+  const key = formatLocalDate(date)
+  selectionDateFrom.value = key
+  selectionDateTo.value = key
 }
 
 function isToday(day: number | null) {
@@ -117,16 +197,6 @@ function isToday(day: number | null) {
     day === today.getDate() &&
     currentDate.value.getMonth() === today.getMonth() &&
     currentDate.value.getFullYear() === today.getFullYear()
-  )
-}
-
-function isSelected(day: number | null) {
-  if (!day) return false
-
-  return (
-    day === selectedDate.value.getDate() &&
-    currentDate.value.getMonth() === selectedDate.value.getMonth() &&
-    currentDate.value.getFullYear() === selectedDate.value.getFullYear()
   )
 }
 
@@ -152,13 +222,12 @@ function nextMonth() {
 }
 
 function planMeals() {
-  const date = selectedDate.value.toISOString().slice(0, 10)
-  router.push(`/planner?date=${date}`)
+  router.push(`/planner?date=${formatLocalDate(selectedDate.value)}`)
 }
 </script>
 
 <template>
-  <section class="dashboard">
+  <section class="dashboard" @mouseup="finishDaySelection">
     <div class="calendar-card">
       <div class="calendar-header">
         <button @click="previousMonth">←</button>
@@ -189,6 +258,9 @@ function planMeals() {
             selected: isSelected(day),
           }"
           @click="selectDay(day)"
+          @mousedown="startDaySelection(day)"
+          @mouseenter="extendDaySelection(day)"
+          @mouseup="finishDaySelection"
         >
           <span v-if="day" class="day-number">
             {{ day }}
@@ -201,25 +273,51 @@ function planMeals() {
       </div>
     </div>
 
-    <div class="shopping-list-panel">
-      <label>
-        From
-        <input v-model="shoppingDateFrom" type="date" />
-      </label>
+    <div class="selected-panel">
+      <div>
+        <h3>
+          {{
+            selectedDate.toLocaleDateString(locale, {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })
+          }}
+        </h3>
 
-      <label>
-        To
-        <input v-model="shoppingDateTo" type="date" />
-      </label>
+        <p>{{ selectedDayDishes.length }} dishes planned</p>
+        <p class="selected-range">
+          Shopping range: {{ selectionStartDate }} → {{ selectionEndDate }}
+        </p>
+      </div>
 
-      <button
-        class="plan-button"
-        :disabled="shoppingListLoading"
-        @click="generateShoppingList"
-      >
-        {{ shoppingListLoading ? "Generating..." : "Generate shopping list" }}
-      </button>
+      <div class="selected-actions">
+        <button
+          class="shopping-button"
+          :disabled="shoppingListLoading"
+          @click="generateShoppingList"
+        >
+          {{ shoppingListLoading ? "Generating..." : "Generate shopping list" }}
+        </button>
+
+        <button
+          class="shopping-button"
+          :disabled="shoppingListLoading"
+          @click="generateShoppingListFile"
+        >
+          Get File
+        </button>
+
+        <button class="plan-button" @click="planMeals">
+          Plan meals
+        </button>
+      </div>
     </div>
+
+    <div v-if="planner.error" class="state error">
+      {{ planner.error }}
+    </div>
+
 
     <div v-if="shoppingListLoading" class="state">
       Loading shopping list...
@@ -278,31 +376,8 @@ function planMeals() {
         </tfoot>
       </table>
     </div>
-
-    <div class="selected-panel">
-      <div>
-        <h3>
-          {{
-            selectedDate.toLocaleDateString("en-US", {
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-            })
-          }}
-        </h3>
-
-        <p>{{ selectedDayDishes.length }} dishes planned</p>
-      </div>
-
-      <button class="plan-button" @click="planMeals">
-        Plan meals
-      </button>
-    </div>
-
-    <div v-if="planner.error" class="state error">
-      {{ planner.error }}
-    </div>
   </section>
+
 </template>
 
 <style scoped>
@@ -314,7 +389,6 @@ function planMeals() {
 }
 
 .calendar-card,
-.shopping-list-panel,
 .shopping-list-result,
 .selected-panel {
   box-sizing: border-box;
@@ -329,13 +403,6 @@ function planMeals() {
   padding: 24px;
 }
 
-.shopping-list-panel {
-  padding: 20px;
-  display: flex;
-  gap: 16px;
-  align-items: end;
-}
-
 .shopping-list-result {
   padding: 20px;
 }
@@ -344,8 +411,9 @@ function planMeals() {
   margin: 0 0 4px;
 }
 
-.shopping-list-range {
-  margin: 0 0 16px;
+.shopping-list-range,
+.selected-range {
+  margin: 4px 0 0;
   color: var(--muted);
 }
 
@@ -409,6 +477,7 @@ function planMeals() {
 }
 
 .calendar-header button,
+.shopping-button,
 .plan-button {
   border: 1px solid var(--border);
   background: var(--bg);
@@ -441,6 +510,7 @@ function planMeals() {
   padding: 10px;
   background: var(--bg);
   cursor: pointer;
+  user-select: none;
 
   display: flex;
   flex-direction: column;
@@ -462,8 +532,8 @@ function planMeals() {
 }
 
 .selected {
-  outline: 2px solid #4f8ef7;
   outline-offset: 2px;
+  background: rgb(18 90 158 / 0.2);
 }
 
 .empty {
@@ -476,6 +546,7 @@ function planMeals() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;
 }
 
 .selected-panel h3 {
@@ -487,12 +558,25 @@ function planMeals() {
   color: var(--muted);
 }
 
+.selected-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .plan-button {
   background: #4f8ef7;
   color: white;
 }
 
-.plan-button:disabled {
+.shopping-button {
+  background: #a67a00;
+  color: white;
+}
+
+.plan-button:disabled,
+.shopping-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

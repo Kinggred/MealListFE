@@ -10,17 +10,13 @@ import type {
   MealView,
 } from "@/types/Meal"
 import type {ShoppingList} from "@/types/ShoppingList.ts";
+import type {Ref, UnwrapRef} from "vue";
 
 interface MealPageParams {
   date_from?: string
   date_to?: string
   page?: number
   size?: number
-}
-
-interface ShoppingListParams {
-  date_from?: string
-  date_to?: string
 }
 
 export async function getMeals(params: MealPageParams = {}): Promise<MealResults> {
@@ -46,6 +42,30 @@ export async function getShoppingList(
       },
     },
   )
+
+  return response.data
+}
+
+export function formatLocalDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, "0")
+  const day = String(date.getDate()).padStart(2, "0")
+
+  return `${year}-${month}-${day}`
+}
+
+export async function getShoppingListFile(
+  dateFrom: string,
+  dateTo: string,
+): Promise<Blob> {
+  const response = await api.get("/meals/shopping_list", {
+    params: {
+      date_from: dateFrom,
+      date_to: dateTo,
+      file: true,
+    },
+    responseType: "blob",
+  })
 
   return response.data
 }

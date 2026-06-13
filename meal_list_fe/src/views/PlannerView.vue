@@ -10,6 +10,7 @@ const planner = usePlannerStore()
 const recipes = ref<Recipe[]>([])
 const selectedRecipeId = ref("")
 const actionError = ref<string | null>(null)
+const locale = window.navigator.language
 
 function parseInitialDate(): Date {
   if (typeof route.query.date === "string") {
@@ -338,7 +339,7 @@ function selectDish(dishId: string) {
       <div class="day-header">
         <div>
           <h1>
-            {{ selectedDate.toLocaleDateString("en-US", {
+            {{ selectedDate.toLocaleDateString(locale, {
             weekday: "long",
             month: "long",
             day: "numeric",

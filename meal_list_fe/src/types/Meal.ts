@@ -64,8 +64,6 @@ export interface IngredientInShoppingList {
   estimated_cost: number
 }
 
-export interface ShoppingListView {
-  date_from: string
-  date_to: string
-  ingredient_list: IngredientInShoppingList[]
+export interface formatLocalDate {
+  date: Date
 }
