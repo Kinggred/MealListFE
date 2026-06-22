@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TrashButton from '@/components/ui/TrashButton.vue'
 import { usePlannerManager } from '@/composables/usePlannerManager'
 
 const {
@@ -101,7 +102,7 @@ const {
             "
           />
 
-          <button @click="removeRecipe(recipe.connectionId)">x</button>
+          <TrashButton label="Remove recipe" @click="removeRecipe(recipe.connectionId)" />
         </div>
       </template>
     </aside>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TrashButton from '@/components/ui/TrashButton.vue'
 import { useDietsManager } from '@/composables/useDietsManager'
 
 const {
@@ -106,9 +107,10 @@ const {
             >
               <span>{{ ingredient.name }}</span>
 
-              <button type="button" @click="removeIngredientFromDiet(ingredient.connection_id)">
-                x
-              </button>
+              <TrashButton
+                label="Remove ingredient"
+                @click="removeIngredientFromDiet(ingredient.connection_id)"
+              />
             </div>
           </div>
 
@@ -120,7 +122,7 @@ const {
             >
               <span>{{ ingredientName(ingredientId) }}</span>
 
-              <button type="button" @click="removeDraftIngredient(ingredientId)">x</button>
+              <TrashButton label="Remove ingredient" @click="removeDraftIngredient(ingredientId)" />
             </div>
           </div>
         </section>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/ui/AppButton.vue'
+import TrashButton from '@/components/ui/TrashButton.vue'
 import type { RecipeIngredientCreate, RecipeView } from '@/types/Recipe'
 
 defineProps<{
@@ -48,13 +49,7 @@ defineEmits<{
 
         <small>{{ ingredient.unit_of_measurement }}</small>
 
-        <button
-          type="button"
-          class="remove-button"
-          @click="$emit('remove', ingredient.connection_id)"
-        >
-          Remove
-        </button>
+        <TrashButton label="Remove ingredient" @click="$emit('remove', ingredient.connection_id)" />
       </div>
     </div>
 
@@ -77,9 +72,7 @@ defineEmits<{
         />
 
         <small>{{ ingredientUnit(ingredient.ingredient_id) }}</small>
-        <button type="button" class="remove-button" @click="$emit('removeInitial', index)">
-          Remove
-        </button>
+        <TrashButton label="Remove ingredient" @click="$emit('removeInitial', index)" />
       </div>
     </div>
 
@@ -132,21 +125,6 @@ defineEmits<{
 
 .selected-ingredient-row small {
   color: var(--muted);
-}
-
-.remove-button {
-  border: 1px solid var(--border);
-  background: rgba(214, 69, 69, 0.08);
-  color: var(--text);
-  border-radius: 8px;
-  padding: 10px 12px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.remove-button:hover {
-  border-color: #d64545;
-  color: #d64545;
 }
 
 .side-primary-action {
