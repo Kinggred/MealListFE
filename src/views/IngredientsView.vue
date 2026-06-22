@@ -68,20 +68,14 @@ const {
 
           <div>
             <label>Cost</label>
-            <input v-model.number="form.cost" type="number" min="0" step="0.01" required />
+            <input v-model.number="form.cost" type="number" min="0" step="1" required />
           </div>
         </div>
 
         <div class="split">
           <div>
             <label>Amount per cost</label>
-            <input
-              v-model.number="form.amount_per_cost"
-              type="number"
-              min="0"
-              step="0.01"
-              required
-            />
+            <input v-model.number="form.amount_per_cost" type="number" min="0" step="1" required />
           </div>
 
           <div>

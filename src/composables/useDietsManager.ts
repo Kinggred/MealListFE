@@ -10,7 +10,14 @@ import {
 import { getIngredients } from '@/api/ingredients'
 import type { Diet, DietView } from '@/types/Diet'
 import type { Ingredient } from '@/types/Ingredient'
-import { parseJsonObject } from '@/utils/json'
+
+function contentFromDietContent(content: Diet['content'] | DietView['content']): string {
+  if (!content) return ''
+  if (typeof content.content === 'string') return content.content
+  return Object.entries(content)
+    .map(([title, value]) => `${title}\n${typeof value === 'string' ? value : ''}`)
+    .join('\n\n')
+}
 
 export function useDietsManager() {
   const diets = ref<Diet[]>([])
@@ -25,7 +32,7 @@ export function useDietsManager() {
 
   const form = reactive({
     name: '',
-    content: '{}',
+    content: '',
   })
 
   const currentDiet = computed(
@@ -34,7 +41,7 @@ export function useDietsManager() {
 
   function setForm(diet?: Diet | DietView) {
     form.name = diet?.name ?? ''
-    form.content = JSON.stringify(diet?.content ?? {}, null, 2)
+    form.content = contentFromDietContent(diet?.content)
   }
 
   async function loadData() {
@@ -92,11 +99,7 @@ export function useDietsManager() {
   }
 
   async function saveDiet() {
-    const content = parseJsonObject(form.content)
-    if (!content) {
-      error.value = 'Diet content must be a JSON object'
-      return
-    }
+    const content = { content: form.content }
 
     saving.value = true
     error.value = null
@@ -105,7 +108,7 @@ export function useDietsManager() {
       if (selectedId.value) {
         const updated = await updateDiet(selectedId.value, {
           name: form.name,
-          content: form.content,
+          content,
         })
         const index = diets.value.findIndex((diet) => diet.id === updated.id)
         if (index !== -1) diets.value[index] = updated

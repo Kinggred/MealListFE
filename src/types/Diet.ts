@@ -12,7 +12,7 @@ export interface DietCreate {
 
 export type DietUpdate = Partial<{
   name: string | null
-  content: string | null
+  content: Record<string, string> | null
 }>
 
 export interface IngredientInDiet {
