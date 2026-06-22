@@ -64,7 +64,7 @@ const {
         <label>Name</label>
         <input v-model="form.name" required />
 
-        <label>Content JSON</label>
+        <label>Content</label>
         <textarea v-model="form.content" rows="5" />
 
         <section class="subpanel">
