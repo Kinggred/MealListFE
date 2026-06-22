@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/ui/AppButton.vue'
+import SaveButton from '@/components/ui/SaveButton.vue'
 import type { IngredientCreate, Unit } from '@/types/Ingredient'
 
 defineProps<{
@@ -60,9 +61,12 @@ defineEmits<{
       Animal derived
     </label>
 
-    <AppButton class="side-primary-action" :disabled="saving" @click="$emit('save')">
-      Save ingredient
-    </AppButton>
+    <SaveButton
+      class="side-primary-action"
+      :disabled="saving"
+      label="Save ingredient"
+      @click="$emit('save')"
+    />
   </section>
 </template>
 

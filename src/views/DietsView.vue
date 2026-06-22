@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AddButton from '@/components/ui/AddButton.vue'
+import SaveButton from '@/components/ui/SaveButton.vue'
 import TrashButton from '@/components/ui/TrashButton.vue'
 import { useDietsManager } from '@/composables/useDietsManager'
 
@@ -35,7 +37,7 @@ const {
           <p>{{ diets.length }} diets</p>
         </div>
 
-        <button @click="newDiet">New</button>
+        <AddButton label="New diet" @click="newDiet" />
       </div>
 
       <div v-if="loading" class="state">Loading...</div>
@@ -132,10 +134,6 @@ const {
         </p>
 
         <div class="actions">
-          <button :disabled="saving">
-            {{ saving ? 'Saving...' : 'Save' }}
-          </button>
-
           <button
             v-if="selectedDiet"
             type="button"
@@ -145,6 +143,8 @@ const {
           >
             Delete
           </button>
+
+          <SaveButton type="submit" :disabled="saving" :label="saving ? 'Saving...' : 'Save'" />
         </div>
       </form>
     </main>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AddButton from '@/components/ui/AddButton.vue'
+import SaveButton from '@/components/ui/SaveButton.vue'
 import { useIngredientsManager } from '@/composables/useIngredientsManager'
 
 const {
@@ -26,7 +28,7 @@ const {
           <p>{{ ingredients.length }} ingredients</p>
         </div>
 
-        <button @click="newIngredient">New</button>
+        <AddButton label="New ingredient" @click="newIngredient" />
       </div>
 
       <div v-if="loading" class="state">Loading...</div>
@@ -103,10 +105,6 @@ const {
         </p>
 
         <div class="actions">
-          <button :disabled="saving">
-            {{ saving ? 'Saving...' : 'Save' }}
-          </button>
-
           <button
             v-if="selectedIngredient"
             type="button"
@@ -116,6 +114,8 @@ const {
           >
             Delete
           </button>
+
+          <SaveButton type="submit" :disabled="saving" :label="saving ? 'Saving...' : 'Save'" />
         </div>
       </form>
     </main>

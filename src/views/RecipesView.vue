@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import AddButton from '@/components/ui/AddButton.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppState from '@/components/ui/AppState.vue'
+import SaveButton from '@/components/ui/SaveButton.vue'
 import RecipeImagePicker from '@/components/recipes/RecipeImagePicker.vue'
 import RecipeIngredientCatalog from '@/components/recipes/RecipeIngredientCatalog.vue'
 import RecipeIngredientCreatePanel from '@/components/recipes/RecipeIngredientCreatePanel.vue'
@@ -58,7 +60,7 @@ const {
         <p>{{ recipes.length }} recipes</p>
       </div>
 
-      <AppButton v-if="viewMode === 'list'" @click="newRecipe">New</AppButton>
+      <AddButton v-if="viewMode === 'list'" label="New recipe" @click="newRecipe" />
     </div>
 
     <AppState v-if="loading">Loading...</AppState>
@@ -142,13 +144,11 @@ const {
       <div class="recipe-editor-actions">
         <AppButton @click="backToRecipeList">Back to list</AppButton>
 
-        <AppButton type="submit" :disabled="saving">
-          {{ saving ? 'Saving...' : 'Save' }}
-        </AppButton>
-
         <AppButton v-if="selectedRecipe" :disabled="saving" @click="removeRecipe">
           Delete
         </AppButton>
+
+        <SaveButton type="submit" :disabled="saving" :label="saving ? 'Saving...' : 'Save'" />
       </div>
     </form>
   </section>
@@ -249,12 +249,16 @@ textarea {
 
 .recipe-editor-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 10px;
   border: 1px solid var(--border);
   background: var(--card);
   border-radius: 8px;
   padding: 14px 20px;
+}
+
+.recipe-editor-actions :deep(.save-button) {
+  margin-left: auto;
 }
 
 @media (max-width: 980px) {

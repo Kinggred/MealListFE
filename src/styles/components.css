@@ -225,6 +225,10 @@
   gap: 10px;
 }
 
+.actions .save-button {
+  margin-left: auto;
+}
+
 .danger:hover {
   border-color: #d64545;
   color: #d64545;

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AppButton from '@/components/ui/AppButton.vue'
+import AddButton from '@/components/ui/AddButton.vue'
 import type { Diet } from '@/types/Diet'
 import type { Ingredient } from '@/types/Ingredient'
 
@@ -24,7 +25,7 @@ defineEmits<{
     <div class="side-section-header">
       <AppButton @click="$emit('back')">Back</AppButton>
       <h2>Add ingredient</h2>
-      <AppButton @click="$emit('create')">New</AppButton>
+      <AddButton label="New ingredient" @click="$emit('create')" />
     </div>
 
     <div class="catalog-columns">
