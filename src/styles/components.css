@@ -40,3 +40,189 @@
 .state-error {
   color: #b00020;
 }
+
+.manager {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(420px, 620px);
+  gap: 24px;
+}
+
+.manager--compact {
+  grid-template-columns: minmax(280px, 1fr) minmax(360px, 520px);
+}
+
+.list-panel,
+.editor-panel {
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.panel-header,
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.manager h1,
+.manager h2,
+.manager h3 {
+  margin: 0 0 4px;
+}
+
+.manager p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.item-list,
+.form,
+.connection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item-row {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.item-row span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-row.active {
+  border-color: #4f8ef7;
+  background: rgba(79, 142, 247, 0.15);
+}
+
+.form label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.form input,
+.form select,
+.form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  font: inherit;
+}
+
+.form textarea {
+  resize: vertical;
+}
+
+.form .split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.form .split > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form .check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form .check input {
+  width: auto;
+}
+
+.manager button {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.manager button:hover {
+  border-color: #4f8ef7;
+}
+
+.manager button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.subpanel {
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+  padding-top: 16px;
+}
+
+.add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.add-row--amount {
+  grid-template-columns: minmax(0, 1fr) 100px auto;
+}
+
+.connection-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.connection-row--amount {
+  grid-template-columns: minmax(0, 1fr) 100px auto;
+}
+
+.connection-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.danger:hover {
+  border-color: #d64545;
+  color: #d64545;
+}
+
+.error {
+  color: #b00020;
+}
+
+@media (max-width: 980px) {
+  .manager {
+    grid-template-columns: 1fr;
+  }
+}

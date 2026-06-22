@@ -1,247 +1,33 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
-import { useRoute } from "vue-router"
-import { usePlannerStore } from "@/stores/planner"
-import { getRecipes } from "@/api/recipes"
-import type { Recipe } from "@/types/Recipe"
+import { usePlannerManager } from '@/composables/usePlannerManager'
 
-const route = useRoute()
-const planner = usePlannerStore()
-const recipes = ref<Recipe[]>([])
-const selectedRecipeId = ref("")
-const actionError = ref<string | null>(null)
-const locale = window.navigator.language
-
-function parseInitialDate(): Date {
-  if (typeof route.query.date === "string") {
-    return new Date(route.query.date)
-  }
-
-  return new Date()
-}
-
-const selectedDate = ref(parseInitialDate())
-const currentDate = ref(
-  new Date(selectedDate.value.getFullYear(), selectedDate.value.getMonth(), 1),
-)
-
-const selectedDishId = ref<string | null>(null)
-
-const today = new Date()
-
-const monthName = computed(() =>
-  currentDate.value.toLocaleDateString("en-US", {
-    month: "long",
-    year: "numeric",
-  }),
-)
-
-const dayDishes = computed(() =>
-  planner.getDishesForDate(selectedDate.value),
-)
-
-const selectedDish = computed(() =>
-  planner.dishes.find((dish) => dish.id === selectedDishId.value) ?? null,
-)
-
-function monthStart(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), 1)
-}
-
-function monthEnd(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
-}
-
-async function loadMonth() {
-  await planner.fetchDishes(monthStart(currentDate.value), monthEnd(currentDate.value))
-}
-
-async function loadRecipes() {
-  const page = await getRecipes({ size: 100 })
-  recipes.value = page.items
-  selectedRecipeId.value = page.items[0]?.id ?? ""
-}
-
-onMounted(async () => {
-  await Promise.all([loadMonth(), loadRecipes()])
-})
-
-watch(currentDate, loadMonth)
-
-watch(selectedDishId, async (dishId) => {
-  if (dishId) await planner.fetchDishDetails(dishId)
-})
-
-const calendarDays = computed(() => {
-  const year = currentDate.value.getFullYear()
-  const month = currentDate.value.getMonth()
-
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-
-  const startOffset = firstDay.getDay()
-  const daysInMonth = lastDay.getDate()
-
-  const days: Array<number | null> = []
-
-  for (let i = 0; i < startOffset; i++) {
-    days.push(null)
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    days.push(day)
-  }
-
-  return days
-})
-
-function dateFromDay(day: number): Date {
-  return new Date(
-    currentDate.value.getFullYear(),
-    currentDate.value.getMonth(),
-    day,
-  )
-}
-
-function selectDay(day: number | null) {
-  if (!day) return
-
-  selectedDate.value = dateFromDay(day)
-  selectedDishId.value = null
-}
-
-function isToday(day: number | null) {
-  if (!day) return false
-
-  return (
-    day === today.getDate() &&
-    currentDate.value.getMonth() === today.getMonth() &&
-    currentDate.value.getFullYear() === today.getFullYear()
-  )
-}
-
-function isSelected(day: number | null) {
-  if (!day) return false
-
-  return (
-    day === selectedDate.value.getDate() &&
-    currentDate.value.getMonth() === selectedDate.value.getMonth() &&
-    currentDate.value.getFullYear() === selectedDate.value.getFullYear()
-  )
-}
-
-function dishesCount(day: number | null) {
-  if (!day) return 0
-  return planner.countDishesForDate(dateFromDay(day))
-}
-
-function previousMonth() {
-  currentDate.value = new Date(
-    currentDate.value.getFullYear(),
-    currentDate.value.getMonth() - 1,
-    1,
-  )
-}
-
-function nextMonth() {
-  currentDate.value = new Date(
-    currentDate.value.getFullYear(),
-    currentDate.value.getMonth() + 1,
-    1,
-  )
-}
-
-async function addDish() {
-  actionError.value = null
-
-  try {
-    const dish = await planner.addDish(selectedDate.value)
-    selectedDishId.value = dish.id
-  } catch {
-    actionError.value = "Failed to add meal"
-  }
-}
-
-async function addRecipe() {
-  if (!selectedDish.value || !selectedRecipeId.value) return
-  actionError.value = null
-
-  try {
-    await planner.addRecipeToDish(selectedDish.value.id, selectedRecipeId.value)
-  } catch {
-    actionError.value = "Failed to add recipe"
-  }
-}
-
-async function removeDish() {
-  if (!selectedDish.value) return
-  actionError.value = null
-
-  try {
-    const dishId = selectedDish.value.id
-    await planner.removeDish(dishId)
-    selectedDishId.value = null
-  } catch {
-    actionError.value = "Failed to remove meal"
-  }
-}
-
-async function saveDishName(name: string) {
-  if (!selectedDish.value) return
-  actionError.value = null
-
-  try {
-    await planner.updateDishName(selectedDish.value.id, name)
-  } catch {
-    actionError.value = "Failed to update meal name"
-  }
-}
-
-async function saveDishTime(time: string) {
-  if (!selectedDish.value) return
-  actionError.value = null
-
-  try {
-    await planner.updateDishTime(selectedDish.value.id, time)
-  } catch {
-    actionError.value = "Failed to update meal time"
-  }
-}
-
-async function saveRecipePortions(
-  connectionId: string,
-  fullPortions: number,
-  halfPortions: number,
-) {
-  if (!selectedDish.value) return
-  actionError.value = null
-
-  try {
-    await planner.updateRecipePortions(
-      selectedDish.value.id,
-      connectionId,
-      fullPortions,
-      halfPortions,
-    )
-  } catch {
-    actionError.value = "Failed to update portions"
-  }
-}
-
-async function removeRecipe(connectionId: string) {
-  if (!selectedDish.value) return
-  actionError.value = null
-
-  try {
-    await planner.removeRecipeFromDish(selectedDish.value.id, connectionId)
-  } catch {
-    actionError.value = "Failed to remove recipe"
-  }
-}
-
-function selectDish(dishId: string) {
-  selectedDishId.value = dishId
-}
+const {
+  planner,
+  recipes,
+  selectedRecipeId,
+  actionError,
+  locale,
+  selectedDate,
+  selectedDishId,
+  monthName,
+  dayDishes,
+  selectedDish,
+  calendarDays,
+  selectDay,
+  isToday,
+  isSelected,
+  dishesCount,
+  previousMonth,
+  nextMonth,
+  addDish,
+  addRecipe,
+  removeDish,
+  saveDishName,
+  saveDishTime,
+  saveRecipePortions,
+  removeRecipe,
+  selectDish,
+} = usePlannerManager()
 </script>
 
 <template>
@@ -249,9 +35,7 @@ function selectDish(dishId: string) {
     <aside class="dish-editor">
       <h2>Dish panel</h2>
 
-      <div v-if="!selectedDish" class="muted">
-        Select a dish or create one.
-      </div>
+      <div v-if="!selectedDish" class="muted">Select a dish or create one.</div>
 
       <template v-else>
         <label>Name</label>
@@ -274,32 +58,19 @@ function selectDish(dishId: string) {
 
         <div class="add-recipe-row">
           <select v-model="selectedRecipeId">
-            <option
-              v-for="recipe in recipes"
-              :key="recipe.id"
-              :value="recipe.id"
-            >
+            <option v-for="recipe in recipes" :key="recipe.id" :value="recipe.id">
               {{ recipe.name }}
             </option>
           </select>
 
-          <button
-            :disabled="!selectedRecipeId"
-            @click="addRecipe"
-          >
-            Add
-          </button>
+          <button :disabled="!selectedRecipeId" @click="addRecipe">Add</button>
         </div>
 
         <p v-if="actionError" class="error">
           {{ actionError }}
         </p>
 
-        <div
-          v-for="recipe in selectedDish.recipes"
-          :key="recipe.connectionId"
-          class="recipe-row"
-        >
+        <div v-for="recipe in selectedDish.recipes" :key="recipe.connectionId" class="recipe-row">
           <span>{{ recipe.recipeName }}</span>
 
           <input
@@ -339,16 +110,16 @@ function selectDish(dishId: string) {
       <div class="day-header">
         <div>
           <h1>
-            {{ selectedDate.toLocaleDateString(locale, {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          }) }}
+            {{
+              selectedDate.toLocaleDateString(locale, {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+              })
+            }}
           </h1>
 
-          <p class="muted">
-            {{ dayDishes.length }} dishes planned
-          </p>
+          <p class="muted">{{ dayDishes.length }} dishes planned</p>
         </div>
 
         <button @click="addDish">Add dish</button>
@@ -381,9 +152,7 @@ function selectDish(dishId: string) {
         <button @click="nextMonth">→</button>
       </div>
 
-      <div v-if="planner.loading" class="state">
-        Loading...
-      </div>
+      <div v-if="planner.loading" class="state">Loading...</div>
 
       <div class="weekdays">
         <span>S</span>

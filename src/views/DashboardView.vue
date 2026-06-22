@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
-import { useRouter } from "vue-router"
-import { usePlannerStore } from "@/stores/planner"
-import { formatLocalDate } from "@/api/meals"
-import AppButton from "@/components/ui/AppButton.vue"
-import AppCard from "@/components/ui/AppCard.vue"
-import AppState from "@/components/ui/AppState.vue"
-import MonthCalendar from "@/components/calendar/MonthCalendar.vue"
-import ShoppingListTable from "@/components/shopping/ShoppingListTable.vue"
-import { useCalendarRange } from "@/composables/useCalendarRange"
-import { useShoppingList } from "@/composables/useShoppingList"
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { usePlannerStore } from '@/stores/planner'
+import { formatLocalDate } from '@/api/meals'
+import AppButton from '@/components/ui/AppButton.vue'
+import AppCard from '@/components/ui/AppCard.vue'
+import AppState from '@/components/ui/AppState.vue'
+import MonthCalendar from '@/components/calendar/MonthCalendar.vue'
+import ShoppingListTable from '@/components/shopping/ShoppingListTable.vue'
+import { useCalendarRange } from '@/composables/useCalendarRange'
+import { useShoppingList } from '@/composables/useShoppingList'
+import { monthEnd, monthStart } from '@/utils/dates'
 
 const router = useRouter()
 const planner = usePlannerStore()
@@ -21,7 +22,6 @@ const {
   selectedDate,
   selectionStartDate,
   selectionEndDate,
-  dateFromDay,
   startDaySelection,
   extendDaySelection,
   finishDaySelection,
@@ -35,42 +35,21 @@ const {
   generateShoppingListFile,
 } = useShoppingList(selectionStartDate, selectionEndDate)
 
-const selectedDayDishes = computed(() =>
-  planner.getDishesForDate(selectedDate.value),
-)
-
-function monthStart(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), 1)
-}
-
-function monthEnd(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
-}
+const selectedDayDishes = computed(() => planner.getDishesForDate(selectedDate.value))
 
 async function loadMonth() {
-  await planner.fetchDishes(
-    monthStart(currentDate.value),
-    monthEnd(currentDate.value),
-  )
+  await planner.fetchDishes(monthStart(currentDate.value), monthEnd(currentDate.value))
 }
 
 onMounted(loadMonth)
 watch(currentDate, loadMonth)
 
 function previousMonth() {
-  currentDate.value = new Date(
-    currentDate.value.getFullYear(),
-    currentDate.value.getMonth() - 1,
-    1,
-  )
+  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1, 1)
 }
 
 function nextMonth() {
-  currentDate.value = new Date(
-    currentDate.value.getFullYear(),
-    currentDate.value.getMonth() + 1,
-    1,
-  )
+  currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, 1)
 }
 
 function handleStartSelection(day: number) {
@@ -111,9 +90,9 @@ function planMeals() {
           <h3>
             {{
               selectedDate.toLocaleDateString(locale, {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
               })
             }}
           </h3>
@@ -131,7 +110,7 @@ function planMeals() {
             :disabled="shoppingListLoading"
             @click="generateShoppingList"
           >
-            {{ shoppingListLoading ? "Generating..." : "Generate shopping list" }}
+            {{ shoppingListLoading ? 'Generating...' : 'Generate shopping list' }}
           </AppButton>
 
           <AppButton
@@ -142,9 +121,7 @@ function planMeals() {
             Get File
           </AppButton>
 
-          <AppButton variant="primary" @click="planMeals">
-            Plan meals
-          </AppButton>
+          <AppButton variant="primary" @click="planMeals"> Plan meals </AppButton>
         </div>
       </div>
     </AppCard>
@@ -153,18 +130,13 @@ function planMeals() {
       {{ planner.error }}
     </AppState>
 
-    <AppState v-if="shoppingListLoading">
-      Loading shopping list...
-    </AppState>
+    <AppState v-if="shoppingListLoading"> Loading shopping list... </AppState>
 
     <AppState v-else-if="shoppingListError" error>
       {{ shoppingListError }}
     </AppState>
 
-    <ShoppingListTable
-      v-else-if="shoppingList"
-      :shopping-list="shoppingList"
-    />
+    <ShoppingListTable v-else-if="shoppingList" :shopping-list="shoppingList" />
   </section>
 </template>
 
