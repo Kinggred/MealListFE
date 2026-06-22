@@ -1,9 +1,11 @@
 import axios from "axios"
 
 const apiUrl =
-  window.APP_CONFIG?.API_URL && window.APP_CONFIG.API_URL !== "__API_URL__"
+  window.APP_CONFIG?.API_URL &&
+  window.APP_CONFIG.API_URL !== "__API_URL__" &&
+  window.APP_CONFIG.API_URL !== "${API_URL}"
     ? window.APP_CONFIG.API_URL
-    : import.meta.env.VITE_API_BASE_URL || "/api/v1"
+    : import.meta.env.VITE_API_URL || "/api/v1"
 
 console.log("API URL:", apiUrl)
 
@@ -11,8 +13,7 @@ export const api = axios.create({
   baseURL: apiUrl,
 })
 
-api.interceptors.request.use(config => {
-
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token")
 
   if (token) {
