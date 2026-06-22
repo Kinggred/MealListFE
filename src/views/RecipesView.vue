@@ -1,178 +1,270 @@
 <script setup lang="ts">
+import AppButton from '@/components/ui/AppButton.vue'
+import AppState from '@/components/ui/AppState.vue'
+import RecipeImagePicker from '@/components/recipes/RecipeImagePicker.vue'
+import RecipeIngredientCatalog from '@/components/recipes/RecipeIngredientCatalog.vue'
+import RecipeIngredientCreatePanel from '@/components/recipes/RecipeIngredientCreatePanel.vue'
+import RecipeIngredientPanel from '@/components/recipes/RecipeIngredientPanel.vue'
+import RecipeList from '@/components/recipes/RecipeList.vue'
 import { useRecipesManager } from '@/composables/useRecipesManager'
 
 const {
   recipes,
-  ingredients,
+  diets,
   selectedId,
   selectedRecipe,
-  currentRecipe,
+  viewMode,
+  sidePanelMode,
   loading,
   saving,
   error,
+  ingredientSearch,
+  imageUrlDraft,
+  showImageOptions,
+  selectedDietIds,
   form,
-  newIngredient,
+  ingredientForm,
+  ingredientUnits,
   initialIngredients,
+  visibleIngredients,
+  previewImage,
+  recipeImage,
   selectRecipe,
   newRecipe,
-  addInitialIngredient,
+  backToRecipeList,
+  openImageOptions,
+  applyImageUrl,
+  uploadImage,
   removeInitialIngredient,
+  saveInitialIngredientAmount,
   saveRecipe,
   removeRecipe,
-  addIngredient,
+  addIngredientFromCatalog,
+  openIngredientCatalog,
+  openIngredientCreate,
+  saveNewIngredient,
   saveIngredientAmount,
   removeIngredient,
   ingredientName,
+  ingredientUnit,
 } = useRecipesManager()
 </script>
 
 <template>
-  <section class="manager">
-    <aside class="list-panel">
-      <div class="panel-header">
-        <div>
-          <h1>Recipes</h1>
-          <p>{{ recipes.length }} recipes</p>
-        </div>
-
-        <button @click="newRecipe">New</button>
+  <section class="recipes-page">
+    <div class="recipes-header">
+      <div>
+        <h1>Recipes</h1>
+        <p>{{ recipes.length }} recipes</p>
       </div>
 
-      <div v-if="loading" class="state">Loading...</div>
+      <AppButton v-if="viewMode === 'list'" @click="newRecipe">New</AppButton>
+    </div>
 
-      <div v-else class="item-list">
-        <button
-          v-for="recipe in recipes"
-          :key="recipe.id"
-          class="item-row"
-          :class="{ active: recipe.id === selectedId }"
-          @click="selectRecipe(recipe)"
-        >
-          <strong>{{ recipe.name }}</strong>
-          <span>{{ recipe.image || 'No image' }}</span>
-        </button>
-      </div>
-    </aside>
+    <AppState v-if="loading">Loading...</AppState>
 
-    <main class="editor-panel">
-      <div class="panel-header">
-        <div>
-          <h2>{{ currentRecipe ? 'Edit recipe' : 'New recipe' }}</h2>
-          <p v-if="selectedRecipe">
-            {{ selectedRecipe.total_calories }} kcal · {{ selectedRecipe.total_cost }} cost
-          </p>
-        </div>
-      </div>
+    <RecipeList
+      v-else-if="viewMode === 'list'"
+      :recipes="recipes"
+      :selected-id="selectedId"
+      :recipe-image="recipeImage"
+      @select="selectRecipe"
+    />
 
-      <form class="form" @submit.prevent="saveRecipe">
-        <label>Name</label>
-        <input v-model="form.name" required />
-
-        <label>Image URL</label>
-        <input v-model="form.image" required />
-
-        <label>Text JSON</label>
-        <textarea v-model="form.text" rows="5" />
-
-        <section class="subpanel">
-          <div class="section-header">
-            <h3>Ingredients</h3>
-          </div>
-
-          <div class="add-row add-row--amount">
-            <select v-model="newIngredient.ingredient_id">
-              <option v-for="ingredient in ingredients" :key="ingredient.id" :value="ingredient.id">
-                {{ ingredient.name }}
-              </option>
-            </select>
-
-            <input
-              v-model.number="newIngredient.amount"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Amount"
+    <form v-else class="recipe-editor" @submit.prevent="saveRecipe">
+      <div class="recipe-editor-body">
+        <main class="recipe-content-panel">
+          <div class="recipe-title-row">
+            <RecipeImagePicker
+              v-model:image-url="imageUrlDraft"
+              :preview-image="previewImage"
+              :show-options="showImageOptions"
+              @toggle="openImageOptions"
+              @upload="uploadImage"
+              @apply-url="applyImageUrl"
             />
 
-            <button
-              v-if="selectedRecipe"
-              type="button"
-              :disabled="saving || !newIngredient.ingredient_id"
-              @click="addIngredient"
-            >
-              Add
-            </button>
-
-            <button
-              v-else
-              type="button"
-              :disabled="!newIngredient.ingredient_id"
-              @click="addInitialIngredient"
-            >
-              Add
-            </button>
-          </div>
-
-          <div v-if="selectedRecipe" class="connection-list">
-            <div
-              v-for="ingredient in selectedRecipe.ingredients"
-              :key="ingredient.connection_id"
-              class="connection-row connection-row--amount"
-            >
-              <span>{{ ingredient.name }}</span>
-
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                :value="ingredient.amount"
-                @change="
-                  saveIngredientAmount(
-                    ingredient.connection_id,
-                    Number(($event.target as HTMLInputElement).value),
-                  )
-                "
-              />
-
-              <button type="button" @click="removeIngredient(ingredient.connection_id)">x</button>
+            <div class="recipe-title-fields">
+              <label>Name</label>
+              <input v-model="form.name" required />
             </div>
           </div>
 
-          <div v-else class="connection-list">
-            <div
-              v-for="(ingredient, index) in initialIngredients"
-              :key="`${ingredient.ingredient_id}-${index}`"
-              class="connection-row connection-row--amount"
-            >
-              <span>
-                {{ ingredientName(ingredient.ingredient_id) }}
-              </span>
-              <span>{{ ingredient.amount }}</span>
-              <button type="button" @click="removeInitialIngredient(index)">x</button>
-            </div>
-          </div>
-        </section>
+          <section class="recipe-text-editor">
+            <label>Recipe text</label>
+            <textarea v-model="form.content" class="recipe-text" rows="14" />
+          </section>
 
-        <p v-if="error" class="error">
-          {{ error }}
-        </p>
+          <p v-if="selectedRecipe" class="recipe-summary">
+            {{ selectedRecipe.total_calories }} kcal · {{ selectedRecipe.total_cost }} cost
+          </p>
+        </main>
 
-        <div class="actions">
-          <button :disabled="saving">
-            {{ saving ? 'Saving...' : 'Save' }}
-          </button>
+        <aside class="recipe-side-panel">
+          <RecipeIngredientPanel
+            v-if="sidePanelMode === 'ingredients'"
+            :selected-recipe="selectedRecipe"
+            :initial-ingredients="initialIngredients"
+            :ingredient-name="ingredientName"
+            :ingredient-unit="ingredientUnit"
+            @add="openIngredientCatalog"
+            @remove="removeIngredient"
+            @remove-initial="removeInitialIngredient"
+            @update-amount="saveIngredientAmount"
+            @update-initial-amount="saveInitialIngredientAmount"
+          />
 
-          <button
-            v-if="selectedRecipe"
-            type="button"
-            class="danger"
-            :disabled="saving"
-            @click="removeRecipe"
-          >
-            Delete
-          </button>
-        </div>
-      </form>
-    </main>
+          <RecipeIngredientCatalog
+            v-else-if="sidePanelMode === 'catalog'"
+            v-model:search="ingredientSearch"
+            v-model:selected-diet-ids="selectedDietIds"
+            :ingredients="visibleIngredients"
+            :diets="diets"
+            :saving="saving"
+            @back="sidePanelMode = 'ingredients'"
+            @create="openIngredientCreate"
+            @add="addIngredientFromCatalog"
+          />
+
+          <RecipeIngredientCreatePanel
+            v-else
+            :ingredient="ingredientForm"
+            :units="ingredientUnits"
+            :saving="saving"
+            @back="openIngredientCatalog"
+            @save="saveNewIngredient"
+          />
+        </aside>
+      </div>
+
+      <AppState v-if="error" error>{{ error }}</AppState>
+
+      <div class="recipe-editor-actions">
+        <AppButton @click="backToRecipeList">Back to list</AppButton>
+
+        <AppButton type="submit" :disabled="saving">
+          {{ saving ? 'Saving...' : 'Save' }}
+        </AppButton>
+
+        <AppButton v-if="selectedRecipe" :disabled="saving" @click="removeRecipe">
+          Delete
+        </AppButton>
+      </div>
+    </form>
   </section>
 </template>
+
+<style scoped>
+.recipes-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.recipes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+
+.recipes-header h1,
+.recipes-header p,
+.recipe-summary {
+  margin: 0;
+}
+
+.recipes-header p,
+.recipe-summary {
+  color: var(--muted);
+}
+
+.recipe-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.recipe-editor-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 520px);
+  gap: 24px;
+}
+
+.recipe-content-panel,
+.recipe-side-panel {
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.recipe-content-panel,
+.recipe-side-panel,
+.recipe-text-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recipe-title-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.recipe-title-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+label {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+input,
+textarea {
+  box-sizing: border-box;
+  width: 100%;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  font: inherit;
+}
+
+.recipe-text {
+  min-height: 320px;
+  resize: vertical;
+}
+
+.recipe-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 14px 20px;
+}
+
+@media (max-width: 980px) {
+  .recipe-editor-body {
+    grid-template-columns: 1fr;
+  }
+
+  .recipe-editor-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+</style>

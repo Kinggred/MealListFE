@@ -16,6 +16,19 @@
   border-radius: 8px;
   padding: 8px 12px;
   cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    transform 0.16s ease;
+}
+
+.app-button:hover {
+  border-color: #4f8ef7;
+  background: rgba(79, 142, 247, 0.12);
+}
+
+.app-button:active {
+  transform: translateY(1px);
 }
 
 .app-button:disabled {
