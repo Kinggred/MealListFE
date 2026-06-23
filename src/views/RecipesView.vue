@@ -3,6 +3,7 @@ import AddButton from '@/components/ui/AddButton.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppState from '@/components/ui/AppState.vue'
 import SaveButton from '@/components/ui/SaveButton.vue'
+import TrashButton from '@/components/ui/TrashButton.vue'
 import RecipeImagePicker from '@/components/recipes/RecipeImagePicker.vue'
 import RecipeIngredientCatalog from '@/components/recipes/RecipeIngredientCatalog.vue'
 import RecipeIngredientCreatePanel from '@/components/recipes/RecipeIngredientCreatePanel.vue'
@@ -144,9 +145,12 @@ const {
       <div class="recipe-editor-actions">
         <AppButton @click="backToRecipeList">Back to list</AppButton>
 
-        <AppButton v-if="selectedRecipe" :disabled="saving" @click="removeRecipe">
-          Delete
-        </AppButton>
+        <TrashButton
+          v-if="selectedRecipe"
+          label="Delete recipe"
+          :disabled="saving"
+          @click="removeRecipe"
+        />
 
         <SaveButton type="submit" :disabled="saving" :label="saving ? 'Saving...' : 'Save'" />
       </div>

@@ -43,15 +43,23 @@ const {
       <div v-if="loading" class="state">Loading...</div>
 
       <div v-else class="item-list">
-        <button
+        <div
           v-for="diet in diets"
           :key="diet.id"
           class="item-row"
           :class="{ active: diet.id === selectedId }"
+          role="button"
+          tabindex="0"
           @click="selectDiet(diet)"
+          @keydown.enter="selectDiet(diet)"
+          @keydown.space.prevent="selectDiet(diet)"
         >
-          <strong>{{ diet.name }}</strong>
-        </button>
+          <div class="item-row-main">
+            <strong>{{ diet.name }}</strong>
+          </div>
+
+          <TrashButton label="Delete diet" :disabled="saving" @click.stop="removeDiet(diet.id)" />
+        </div>
       </div>
     </aside>
 
@@ -134,15 +142,12 @@ const {
         </p>
 
         <div class="actions">
-          <button
+          <TrashButton
             v-if="selectedDiet"
-            type="button"
-            class="danger"
+            label="Delete diet"
             :disabled="saving"
             @click="removeDiet"
-          >
-            Delete
-          </button>
+          />
 
           <SaveButton type="submit" :disabled="saving" :label="saving ? 'Saving...' : 'Save'" />
         </div>

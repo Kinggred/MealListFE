@@ -35,8 +35,8 @@ defineProps<{
 .trash-button {
   display: inline-grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border: 1px solid var(--border);
   background: rgba(214, 69, 69, 0.08);
   color: var(--text);
@@ -66,7 +66,7 @@ defineProps<{
 }
 
 .trash-button svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 </style>

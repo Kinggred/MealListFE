@@ -36,7 +36,7 @@ defineEmits<{
         <input
           type="number"
           min="0"
-          step="1"
+          step="any"
           :value="ingredient.amount"
           @change="
             $emit(
@@ -64,7 +64,7 @@ defineEmits<{
         <input
           type="number"
           min="0"
-          step="1"
+          step="any"
           :value="ingredient.amount"
           @change="
             $emit('updateInitialAmount', index, Number(($event.target as HTMLInputElement).value))

@@ -33,12 +33,12 @@ defineEmits<{
 
       <div>
         <label>Cost</label>
-        <input v-model.number="ingredient.cost" type="number" min="0" step="1" />
+        <input v-model.number="ingredient.cost" type="number" min="0" step="any" />
       </div>
 
       <div>
         <label>Amount per cost</label>
-        <input v-model.number="ingredient.amount_per_cost" type="number" min="0" step="1" />
+        <input v-model.number="ingredient.amount_per_cost" type="number" min="0" step="any" />
       </div>
 
       <div>
