@@ -167,4 +167,15 @@ function planMeals() {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+
+@media (max-width: 760px) {
+  .selected-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .selected-actions {
+    justify-content: stretch;
+  }
+}
 </style>

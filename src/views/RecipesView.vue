@@ -36,6 +36,7 @@ const {
   newRecipe,
   backToRecipeList,
   openImageOptions,
+  closeImageOptions,
   applyImageUrl,
   uploadImage,
   removeInitialIngredient,
@@ -83,6 +84,7 @@ const {
               :preview-image="previewImage"
               :show-options="showImageOptions"
               @toggle="openImageOptions"
+              @close="closeImageOptions"
               @upload="uploadImage"
               @apply-url="applyImageUrl"
             />
@@ -143,7 +145,7 @@ const {
       <AppState v-if="error" error>{{ error }}</AppState>
 
       <div class="recipe-editor-actions">
-        <AppButton @click="backToRecipeList">Back to list</AppButton>
+        <AppButton type="button" @click="backToRecipeList">Back to list</AppButton>
 
         <TrashButton
           v-if="selectedRecipe"
@@ -244,6 +246,7 @@ textarea {
   border-radius: 8px;
   padding: 10px;
   font: inherit;
+  min-height: 44px;
 }
 
 .recipe-text {
@@ -273,6 +276,46 @@ textarea {
   .recipe-editor-actions {
     justify-content: flex-start;
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .recipes-page {
+    gap: 14px;
+  }
+
+  .recipes-header,
+  .recipe-content-panel,
+  .recipe-side-panel,
+  .recipe-editor-actions {
+    padding: 14px;
+  }
+
+  .recipes-header {
+    align-items: center;
+  }
+
+  .recipe-title-row {
+    grid-template-columns: 1fr;
+  }
+
+  .recipe-text {
+    min-height: 220px;
+  }
+
+  .recipe-editor-actions {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    align-items: center;
+  }
+
+  .recipe-editor-actions :deep(.app-button) {
+    grid-column: 1 / -1;
+  }
+
+  .recipe-editor-actions :deep(.save-button) {
+    margin-left: 0;
+    justify-self: end;
   }
 }
 </style>

@@ -1,17 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
-defineProps<{
+const props = defineProps<{
   previewImage: string
   showOptions: boolean
 }>()
 
 const imageUrl = defineModel<string>('imageUrl', { required: true })
+const control = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 
-defineEmits<{
+const emit = defineEmits<{
   toggle: []
+  close: []
   upload: [event: Event]
   applyUrl: []
 }>()
@@ -19,10 +21,30 @@ defineEmits<{
 function chooseFile() {
   fileInput.value?.click()
 }
+
+function handleDocumentPointerDown(event: PointerEvent) {
+  if (!control.value || control.value.contains(event.target as Node)) return
+  emit('close')
+}
+
+watch(
+  () => props.showOptions,
+  (showOptions) => {
+    if (showOptions) {
+      document.addEventListener('pointerdown', handleDocumentPointerDown)
+    } else {
+      document.removeEventListener('pointerdown', handleDocumentPointerDown)
+    }
+  },
+)
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', handleDocumentPointerDown)
+})
 </script>
 
 <template>
-  <div class="recipe-image-control">
+  <div ref="control" class="recipe-image-control">
     <button type="button" class="recipe-image-preview" @click="$emit('toggle')">
       <img v-if="previewImage" :src="previewImage" alt="" />
       <span v-else>Image</span>
@@ -37,11 +59,11 @@ function chooseFile() {
         @change="$emit('upload', $event)"
       />
 
-      <AppButton @click="chooseFile">Upload image</AppButton>
+      <AppButton type="button" @click="chooseFile">Upload image</AppButton>
 
       <div class="image-url-row">
         <input v-model="imageUrl" placeholder="Image URL" />
-        <AppButton @click="$emit('applyUrl')">Use URL</AppButton>
+        <AppButton type="button" @click="$emit('applyUrl')">Use URL</AppButton>
       </div>
     </div>
   </div>
@@ -111,9 +133,27 @@ input {
   border-radius: 8px;
   padding: 10px;
   font: inherit;
+  min-height: 44px;
 }
 
 input {
   width: 100%;
+}
+
+@media (max-width: 640px) {
+  .recipe-image-control {
+    width: 100%;
+  }
+
+  .image-options {
+    position: static;
+    width: 100%;
+    margin-top: 10px;
+    box-shadow: none;
+  }
+
+  .image-url-row {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

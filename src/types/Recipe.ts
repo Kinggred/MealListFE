@@ -44,7 +44,7 @@ export interface RecipeView {
   name: string
   text: Record<string, string> | null
   image: string | null
-  ingredients: IngredientInRecipe[]
-  total_cost: number
-  total_calories: number
+  ingredients: IngredientInRecipe[] | null
+  total_cost: number | null
+  total_calories: number | null
 }

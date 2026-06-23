@@ -233,6 +233,8 @@ const {
 }
 
 input {
+  width: 100%;
+  min-height: 44px;
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
@@ -241,6 +243,8 @@ input {
 }
 
 select {
+  width: 100%;
+  min-height: 44px;
   min-width: 0;
   background: var(--bg);
   color: var(--text);
@@ -250,12 +254,14 @@ select {
 }
 
 button {
+  min-height: 44px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
   border-radius: 10px;
   padding: 10px 14px;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 button:hover {
@@ -292,9 +298,16 @@ button:hover {
 
 .recipe-row {
   display: grid;
-  grid-template-columns: 1fr 70px 70px auto;
+  grid-template-columns: minmax(0, 1fr) 70px 70px auto;
   gap: 8px;
   align-items: center;
+}
+
+.recipe-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .add-recipe-row {
@@ -376,5 +389,72 @@ button:hover {
 .calendar-day.empty {
   opacity: 0.25;
   cursor: default;
+}
+
+@media (max-width: 1180px) {
+  .planner {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  }
+
+  .dish-editor {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}
+
+@media (max-width: 760px) {
+  .planner {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .dish-editor,
+  .day-panel,
+  .mini-calendar {
+    border-radius: 8px;
+    padding: 14px;
+  }
+
+  .mini-calendar {
+    order: 1;
+  }
+
+  .day-panel {
+    order: 2;
+  }
+
+  .dish-editor {
+    grid-column: auto;
+    order: 3;
+  }
+
+  .day-header {
+    gap: 12px;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-day {
+    min-height: 42px;
+    border-radius: 8px;
+  }
+}
+
+@media (max-width: 520px) {
+  .recipe-row {
+    grid-template-columns: minmax(0, 1fr) 62px 62px 44px;
+    gap: 4px;
+  }
+
+  .add-recipe-row {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    align-items: flex-start;
+    gap: 10px;
+  }
 }
 </style>

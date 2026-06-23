@@ -54,6 +54,8 @@ defineEmits<{
   padding: 10px 14px;
   text-align: left;
   cursor: pointer;
+  min-height: 70px;
+  touch-action: manipulation;
 }
 
 .recipe-list-item:hover {
@@ -92,5 +94,11 @@ defineEmits<{
 
 .recipe-list-item small {
   color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .recipe-list {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -33,5 +33,28 @@ import HeaderBar from "./HeaderBar.vue"
   grid-area: content;
   overflow: auto;
   padding: 28px;
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "header"
+      "sidebar"
+      "content";
+  }
+
+  .content {
+    overflow: visible;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .content {
+    padding: 12px;
+  }
 }
 </style>

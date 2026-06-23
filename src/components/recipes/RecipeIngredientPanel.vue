@@ -76,7 +76,7 @@ defineEmits<{
       </div>
     </div>
 
-    <AppButton class="side-primary-action" @click="$emit('add')">Add</AppButton>
+    <AppButton type="button" class="side-primary-action" @click="$emit('add')">Add</AppButton>
   </section>
 </template>
 
@@ -139,9 +139,20 @@ input {
   border-radius: 8px;
   padding: 10px;
   font: inherit;
+  min-height: 44px;
 }
 
 input {
   width: 100%;
+}
+
+@media (max-width: 420px) {
+  .selected-ingredient-row {
+    grid-template-columns: minmax(0, 1fr) 86px auto;
+  }
+
+  .selected-ingredient-row small {
+    grid-column: 1 / 2;
+  }
 }
 </style>

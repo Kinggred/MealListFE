@@ -179,6 +179,7 @@ function handleMouseEnter(day: number | null) {
   background: var(--bg);
   cursor: pointer;
   user-select: none;
+  touch-action: manipulation;
 
   display: flex;
   flex-direction: column;
@@ -207,5 +208,44 @@ function handleMouseEnter(day: number | null) {
 .empty {
   opacity: 0.35;
   cursor: default;
+}
+
+@media (max-width: 640px) {
+  .calendar-header {
+    margin-bottom: 16px;
+  }
+
+  .calendar-header h2 {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .weekdays span {
+    font-size: 0;
+  }
+
+  .weekdays span::first-letter {
+    font-size: 13px;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-day {
+    min-height: 46px;
+    border-radius: 8px;
+    padding: 6px 4px;
+    align-items: center;
+    text-align: center;
+  }
+
+  .calendar-day small {
+    font-size: 0;
+  }
+
+  .calendar-day small::first-letter {
+    font-size: 11px;
+  }
 }
 </style>

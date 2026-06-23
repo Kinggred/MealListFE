@@ -38,4 +38,30 @@ a.router-link-active {
   background: #4f8ef7;
   color: white;
 }
+
+@media (max-width: 760px) {
+  .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 8px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    scrollbar-width: none;
+  }
+
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  a {
+    flex: 0 0 auto;
+    padding: 10px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+}
 </style>
