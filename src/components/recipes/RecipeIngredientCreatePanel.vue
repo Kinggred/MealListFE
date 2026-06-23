@@ -19,7 +19,7 @@ defineEmits<{
   <section class="side-section ingredient-create-panel">
     <div class="side-section-header">
       <h2>New ingredient</h2>
-      <AppButton @click="$emit('back')">Back</AppButton>
+      <AppButton type="button" @click="$emit('back')">Back</AppButton>
     </div>
 
     <label>Name</label>
@@ -125,10 +125,22 @@ select {
   border-radius: 8px;
   padding: 10px;
   font: inherit;
+  min-height: 44px;
 }
 
 input,
 select {
   width: 100%;
+}
+
+@media (max-width: 640px) {
+  .side-section-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .ingredient-create-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -2,10 +2,10 @@
 import AppButton from '@/components/ui/AppButton.vue'
 import AddButton from '@/components/ui/AddButton.vue'
 import type { Diet } from '@/types/Diet'
-import type { Ingredient } from '@/types/Ingredient'
+import type { IngredientSearchResult } from '@/types/Ingredient'
 
 defineProps<{
-  ingredients: Ingredient[]
+  ingredients: IngredientSearchResult[]
   diets: Diet[]
   saving: boolean
 }>()
@@ -23,7 +23,7 @@ defineEmits<{
 <template>
   <section class="side-section catalog-layout">
     <div class="side-section-header">
-      <AppButton @click="$emit('back')">Back</AppButton>
+      <AppButton type="button" @click="$emit('back')">Back</AppButton>
       <h2>Add ingredient</h2>
       <AddButton label="New ingredient" @click="$emit('create')" />
     </div>

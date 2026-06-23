@@ -1,11 +1,13 @@
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import {
   createIngredient,
   deleteIngredient,
+  getIngredient,
   getIngredients,
+  searchIngredients,
   updateIngredient,
 } from '@/api/ingredients'
-import type { Ingredient, IngredientCreate, Unit } from '@/types/Ingredient'
+import type { Ingredient, IngredientCreate, IngredientSearchResult, Unit } from '@/types/Ingredient'
 
 export const ingredientUnits: Unit[] = ['g', 'ml', 'p']
 
@@ -19,18 +21,32 @@ const emptyIngredientForm: IngredientCreate = {
   animal_derived: false,
 }
 
+function normalizeSearch(value: string) {
+  return value.trim().toLocaleLowerCase()
+}
+
+function uniqueIngredients(ingredients: IngredientSearchResult[]) {
+  const seen = new Set<string>()
+
+  return ingredients.filter((ingredient) => {
+    const key = normalizeSearch(ingredient.name) || ingredient.id
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 export function useIngredientsManager() {
-  const ingredients = ref<Ingredient[]>([])
+  const ingredients = ref<IngredientSearchResult[]>([])
+  const selectedIngredient = ref<Ingredient | null>(null)
   const selectedId = ref<string | null>(null)
   const loading = ref(true)
   const saving = ref(false)
   const error = ref<string | null>(null)
+  const searchQuery = ref('')
+  let searchTimer: ReturnType<typeof window.setTimeout> | null = null
 
   const form = reactive<IngredientCreate>({ ...emptyIngredientForm })
-
-  const selectedIngredient = computed(
-    () => ingredients.value.find((ingredient) => ingredient.id === selectedId.value) ?? null,
-  )
 
   function setForm(ingredient?: Ingredient) {
     Object.assign(form, {
@@ -50,8 +66,14 @@ export function useIngredientsManager() {
     error.value = null
 
     try {
-      const page = await getIngredients({ size: 100 })
-      ingredients.value = page.items
+      const query = normalizeSearch(searchQuery.value)
+      const page = query
+        ? await searchIngredients({ search_query: query, size: 100 })
+        : await getIngredients({ size: 100 })
+      const visibleIngredients = query
+        ? page.items.filter((ingredient) => normalizeSearch(ingredient.name).includes(query))
+        : page.items
+      ingredients.value = uniqueIngredients(visibleIngredients)
     } catch (e) {
       error.value = 'Failed to load ingredients'
       console.error(e)
@@ -60,13 +82,23 @@ export function useIngredientsManager() {
     }
   }
 
-  function selectIngredient(ingredient: Ingredient) {
+  async function selectIngredient(ingredient: IngredientSearchResult) {
     selectedId.value = ingredient.id
-    setForm(ingredient)
+    error.value = null
+
+    try {
+      const details = await getIngredient(ingredient.id)
+      selectedIngredient.value = details
+      setForm(details)
+    } catch (e) {
+      error.value = 'Failed to load ingredient'
+      console.error(e)
+    }
   }
 
   function newIngredient() {
     selectedId.value = null
+    selectedIngredient.value = null
     setForm()
   }
 
@@ -77,8 +109,9 @@ export function useIngredientsManager() {
     try {
       if (selectedId.value) {
         const updated = await updateIngredient(selectedId.value, { ...form })
+        selectedIngredient.value = updated
         const index = ingredients.value.findIndex((ingredient) => ingredient.id === updated.id)
-        if (index !== -1) ingredients.value[index] = updated
+        if (index !== -1) ingredients.value[index] = { id: updated.id, name: updated.name }
       } else {
         await createIngredient({ ...form })
         await loadIngredients()
@@ -110,11 +143,19 @@ export function useIngredientsManager() {
     }
   }
 
+  function scheduleSearch() {
+    if (searchTimer) window.clearTimeout(searchTimer)
+    searchTimer = window.setTimeout(loadIngredients, 250)
+  }
+
+  watch(searchQuery, scheduleSearch)
+
   onMounted(loadIngredients)
 
   return {
     units: ingredientUnits,
     ingredients,
+    searchQuery,
     selectedId,
     selectedIngredient,
     loading,

@@ -7,6 +7,7 @@ import { useIngredientsManager } from '@/composables/useIngredientsManager'
 const {
   units,
   ingredients,
+  searchQuery,
   selectedId,
   selectedIngredient,
   loading,
@@ -32,6 +33,8 @@ const {
         <AddButton label="New ingredient" @click="newIngredient" />
       </div>
 
+      <input v-model="searchQuery" class="manager-search" type="search" placeholder="Search" />
+
       <div v-if="loading" class="state">Loading...</div>
 
       <div v-else class="item-list">
@@ -48,10 +51,11 @@ const {
         >
           <div class="item-row-main">
             <strong>{{ ingredient.name }}</strong>
-            <span
-              >{{ ingredient.calories }} kcal · {{ ingredient.amount_per_cost }}
-              {{ ingredient.unit_of_measurement }}</span
-            >
+            <span v-if="ingredient.id === selectedIngredient?.id">
+              {{ selectedIngredient.calories }} kcal · {{ selectedIngredient.amount_per_cost }}
+              {{ selectedIngredient.unit_of_measurement }}
+            </span>
+            <span v-else>Select to edit</span>
           </div>
 
           <TrashButton

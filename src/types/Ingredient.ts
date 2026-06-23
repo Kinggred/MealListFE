@@ -11,6 +11,11 @@ export interface Ingredient {
   animal_derived: boolean
 }
 
+export interface IngredientSearchResult {
+  id: string
+  name: string
+}
+
 export type IngredientCreate = Omit<Ingredient, "id">
 
 export type IngredientUpdate = Partial<{

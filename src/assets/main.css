@@ -2,3 +2,18 @@ body {
   margin: 0;
   font-family: system-ui, sans-serif;
 }
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

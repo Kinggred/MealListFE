@@ -44,6 +44,11 @@ const theme = useThemeStore()
   background: var(--card);
 }
 
+.header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
 .right {
   display: flex;
   gap: 16px;
@@ -66,5 +71,36 @@ const theme = useThemeStore()
 
 .icon-action:hover {
   border-color: #4f8ef7;
+}
+
+@media (max-width: 760px) {
+  .header {
+    min-height: 58px;
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
+  .right {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .right span {
+    max-width: 36vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .right button:not(.icon-action) {
+    min-height: 38px;
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .right span {
+    display: none;
+  }
 }
 </style>
