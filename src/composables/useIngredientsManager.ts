@@ -92,18 +92,16 @@ export function useIngredientsManager() {
     }
   }
 
-  async function removeIngredient() {
-    if (!selectedId.value) return
+  async function removeIngredient(ingredientId = selectedId.value) {
+    if (!ingredientId) return
 
     saving.value = true
     error.value = null
 
     try {
-      await deleteIngredient(selectedId.value)
-      ingredients.value = ingredients.value.filter(
-        (ingredient) => ingredient.id !== selectedId.value,
-      )
-      newIngredient()
+      await deleteIngredient(ingredientId)
+      ingredients.value = ingredients.value.filter((ingredient) => ingredient.id !== ingredientId)
+      if (ingredientId === selectedId.value) newIngredient()
     } catch (e) {
       error.value = 'Failed to delete ingredient'
       console.error(e)

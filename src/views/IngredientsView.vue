@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import AddButton from '@/components/ui/AddButton.vue'
+import SaveButton from '@/components/ui/SaveButton.vue'
+import TrashButton from '@/components/ui/TrashButton.vue'
 import { useIngredientsManager } from '@/composables/useIngredientsManager'
 
 const {
@@ -26,25 +29,38 @@ const {
           <p>{{ ingredients.length }} ingredients</p>
         </div>
 
-        <button @click="newIngredient">New</button>
+        <AddButton label="New ingredient" @click="newIngredient" />
       </div>
 
       <div v-if="loading" class="state">Loading...</div>
 
       <div v-else class="item-list">
-        <button
+        <div
           v-for="ingredient in ingredients"
           :key="ingredient.id"
           class="item-row"
           :class="{ active: ingredient.id === selectedId }"
+          role="button"
+          tabindex="0"
           @click="selectIngredient(ingredient)"
+          @keydown.enter="selectIngredient(ingredient)"
+          @keydown.space.prevent="selectIngredient(ingredient)"
         >
-          <strong>{{ ingredient.name }}</strong>
-          <span
-            >{{ ingredient.calories }} kcal · {{ ingredient.amount_per_cost }}
-            {{ ingredient.unit_of_measurement }}</span
+          <div class="item-row-main">
+            <strong>{{ ingredient.name }}</strong>
+            <span
+              >{{ ingredient.calories }} kcal · {{ ingredient.amount_per_cost }}
+              {{ ingredient.unit_of_measurement }}</span
+            >
+          </div>
+
+          <TrashButton
+            label="Delete ingredient"
+            :disabled="saving"
+            @click.stop="removeIngredient(ingredient.id)"
           >
-        </button>
+          </TrashButton>
+        </div>
       </div>
     </aside>
 
@@ -68,14 +84,20 @@ const {
 
           <div>
             <label>Cost</label>
-            <input v-model.number="form.cost" type="number" min="0" step="1" required />
+            <input v-model.number="form.cost" type="number" min="0" step="any" required />
           </div>
         </div>
 
         <div class="split">
           <div>
             <label>Amount per cost</label>
-            <input v-model.number="form.amount_per_cost" type="number" min="0" step="1" required />
+            <input
+              v-model.number="form.amount_per_cost"
+              type="number"
+              min="0"
+              step="any"
+              required
+            />
           </div>
 
           <div>
@@ -103,19 +125,14 @@ const {
         </p>
 
         <div class="actions">
-          <button :disabled="saving">
-            {{ saving ? 'Saving...' : 'Save' }}
-          </button>
-
-          <button
+          <TrashButton
             v-if="selectedIngredient"
-            type="button"
-            class="danger"
+            label="Delete ingredient"
             :disabled="saving"
             @click="removeIngredient"
-          >
-            Delete
-          </button>
+          />
+
+          <SaveButton type="submit" :disabled="saving" :label="saving ? 'Saving...' : 'Save'" />
         </div>
       </form>
     </main>

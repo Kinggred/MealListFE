@@ -54,7 +54,7 @@ const {
 
         <div class="section-header">
           <h3>Recipes</h3>
-          <button class="danger" @click="removeDish">Delete meal</button>
+          <TrashButton label="Delete meal" @click="removeDish" />
         </div>
 
         <div class="add-recipe-row">

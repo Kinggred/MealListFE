@@ -130,16 +130,16 @@ export function useDietsManager() {
     }
   }
 
-  async function removeDiet() {
-    if (!selectedId.value) return
+  async function removeDiet(dietId = selectedId.value) {
+    if (!dietId) return
 
     saving.value = true
     error.value = null
 
     try {
-      await deleteDiet(selectedId.value)
-      diets.value = diets.value.filter((diet) => diet.id !== selectedId.value)
-      newDiet()
+      await deleteDiet(dietId)
+      diets.value = diets.value.filter((diet) => diet.id !== dietId)
+      if (dietId === selectedId.value) newDiet()
     } catch (e) {
       error.value = 'Failed to delete diet'
       console.error(e)

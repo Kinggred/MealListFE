@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AddButton from '@/components/ui/AddButton.vue'
+import SaveButton from '@/components/ui/SaveButton.vue'
 import TrashButton from '@/components/ui/TrashButton.vue'
 import { useDietsManager } from '@/composables/useDietsManager'
 
@@ -35,21 +37,29 @@ const {
           <p>{{ diets.length }} diets</p>
         </div>
 
-        <button @click="newDiet">New</button>
+        <AddButton label="New diet" @click="newDiet" />
       </div>
 
       <div v-if="loading" class="state">Loading...</div>
 
       <div v-else class="item-list">
-        <button
+        <div
           v-for="diet in diets"
           :key="diet.id"
           class="item-row"
           :class="{ active: diet.id === selectedId }"
+          role="button"
+          tabindex="0"
           @click="selectDiet(diet)"
+          @keydown.enter="selectDiet(diet)"
+          @keydown.space.prevent="selectDiet(diet)"
         >
-          <strong>{{ diet.name }}</strong>
-        </button>
+          <div class="item-row-main">
+            <strong>{{ diet.name }}</strong>
+          </div>
+
+          <TrashButton label="Delete diet" :disabled="saving" @click.stop="removeDiet(diet.id)" />
+        </div>
       </div>
     </aside>
 
@@ -132,19 +142,14 @@ const {
         </p>
 
         <div class="actions">
-          <button :disabled="saving">
-            {{ saving ? 'Saving...' : 'Save' }}
-          </button>
-
-          <button
+          <TrashButton
             v-if="selectedDiet"
-            type="button"
-            class="danger"
+            label="Delete diet"
             :disabled="saving"
             @click="removeDiet"
-          >
-            Delete
-          </button>
+          />
+
+          <SaveButton type="submit" :disabled="saving" :label="saving ? 'Saving...' : 'Save'" />
         </div>
       </form>
     </main>

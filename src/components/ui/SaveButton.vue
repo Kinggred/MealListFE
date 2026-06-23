@@ -1,18 +1,20 @@
 <script setup lang="ts">
-defineProps<{
-  label?: string
-  disabled?: boolean
-}>()
+withDefaults(
+  defineProps<{
+    label?: string
+    disabled?: boolean
+    type?: 'button' | 'submit'
+  }>(),
+  {
+    label: 'Save',
+    disabled: false,
+    type: 'button',
+  },
+)
 </script>
 
 <template>
-  <button
-    type="button"
-    class="trash-button"
-    :aria-label="label ?? 'Remove'"
-    :title="label ?? 'Remove'"
-    :disabled="disabled"
-  >
+  <button :type="type" class="save-button" :aria-label="label" :title="label" :disabled="disabled">
     <svg
       aria-hidden="true"
       viewBox="0 0 24 24"
@@ -22,23 +24,21 @@ defineProps<{
       stroke-linecap="round"
       stroke-linejoin="round"
     >
-      <path d="M3 6h18" />
-      <path d="M8 6V4h8v2" />
-      <path d="M19 6l-1 14H6L5 6" />
-      <path d="M10 11v6" />
-      <path d="M14 11v6" />
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" />
+      <path d="M17 21v-8H7v8" />
+      <path d="M7 3v5h8" />
     </svg>
   </button>
 </template>
 
 <style scoped>
-.trash-button {
+.save-button {
   display: inline-grid;
   place-items: center;
   width: 44px;
   height: 44px;
   border: 1px solid var(--border);
-  background: rgba(214, 69, 69, 0.08);
+  background: rgba(34, 197, 94, 0.12);
   color: var(--text);
   border-radius: 8px;
   padding: 0;
@@ -50,23 +50,27 @@ defineProps<{
     transform 0.16s ease;
 }
 
-.trash-button:hover {
-  border-color: #d64545;
-  background: rgba(214, 69, 69, 0.14);
-  color: #d64545;
+.save-button:hover {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.2);
+  color: #16a34a;
 }
 
-.trash-button:active {
+.save-button:active {
   transform: translateY(1px);
 }
 
-.trash-button:disabled {
+.save-button:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
-.trash-button svg {
+.save-button svg {
   width: 20px;
   height: 20px;
+}
+
+.save-button.side-primary-action {
+  width: 100%;
 }
 </style>
